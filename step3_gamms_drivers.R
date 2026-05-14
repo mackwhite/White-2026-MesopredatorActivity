@@ -530,8 +530,3 @@ act <- all |>
             sd = sd(y)
       )
 glimpse(act)
-
-test <- readRDS('local-data/archive/accelerometer-model-data-012025.RDS') |> 
-      filter(species == 'common snook')
-glimpse(test)
-unique(test$species)
