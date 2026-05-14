@@ -497,6 +497,6 @@ glimpse(act_summary)
 
 # model checks ------------------------------------------------------------
 gam.check(t_size)
-gam.check(t_size)
-gam.check()
-
+gam.check(s_size)
+gam.check(t_temp)
+gam.check(t_stage)
