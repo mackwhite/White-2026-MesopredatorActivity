@@ -286,7 +286,7 @@ temp <- temphr1 |>
             # sd_temp = sd(temp_c, na.rm = TRUE)
       )
 
-stage <- readxl::read_xlsx('../MAP/data/hydrology/mo215_current.xlsx') |> 
+stage <- readxl::read_xlsx('../1. archive/MAP/data/hydrology/mo215_current.xlsx') |> 
       mutate(date = as.Date(Date)) |> 
       filter(date >= as.Date("2024-01-14") & date <= as.Date("2024-12-14")) |> 
       rename(stage = `Stage (cm)`) |> 

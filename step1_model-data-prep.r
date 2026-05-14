@@ -38,7 +38,7 @@ temp <- read_csv("local-data/botcreek_temp_15mins.csv") |>
       mutate(datetime_est = as.POSIXct(datetime, format = "%m/%d/%y %H:%M"))
 
 ### read in marsh stage data ---
-hydro <- readxl::read_xlsx('../MAP/data/hydrology/mo215_current.xlsx') |> 
+hydro <- readxl::read_xlsx('../1. archive/MAP/data/hydrology/mo215_current.xlsx') |> 
       mutate(date = as.Date(Date)) |> 
       filter(date >= as.Date("2024-01-13") & date <= as.Date("2024-12-14")) |> 
       rename(stage = `Stage (cm)`) |> 
