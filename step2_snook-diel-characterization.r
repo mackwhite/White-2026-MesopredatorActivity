@@ -80,6 +80,22 @@ snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re
                         family = gaussian(link = 'log'),
                         data = all)
 
+# double-check temporal autocorrelation -----------------------------------
+m_bam = bam(
+      formula(snook_gamm),
+      data = all,
+      method = "fREML",
+      rho = rho_est,
+      AR.start = c(TRUE, diff(all$time) != 1)
+)
+
+performance(m_bam)
+plot(m_bam)
+plot(snook_gamm)
+
+summary(snook_gamm)
+summary(m_bam)
+
 ### visualize model predictions ---
 snook_gamm_vis <- visreg(snook_gamm, "time", type = "conditional", scale = "response")
 
