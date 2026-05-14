@@ -494,3 +494,9 @@ act_summary <- all |>
             sd = sd(y)
       )
 glimpse(act_summary)
+
+# model checks ------------------------------------------------------------
+gam.check(t_size)
+gam.check(t_size)
+gam.check()
+
