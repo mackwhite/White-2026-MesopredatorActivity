@@ -330,7 +330,7 @@ s_stage <- gam(y ~ s(time, bs="cc") + s(stage, k = 3) + s(temp, k = 3) + s(weigh
                method = "REML")
 
 ### compare models ---
-performance::compare_performance(t_stage, s_stage, l_stage) |>
+performance::compare_performance(t_stage, s_stage) |>
       mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|>
       # capture.output(file = "output/tables/stage-model-comparison.csv")
 
