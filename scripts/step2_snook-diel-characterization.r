@@ -1,7 +1,7 @@
-###project: EctothermPredatorActivityDrivers
-###author(s): MW
+###project: Snook Activity Patterns
+###author(s): MW, JR, WRJ, ROS
 ###goal(s): 
-###date(s): February 2025
+###date(s): May 2026
 ###note(s): 
 # Housekeeping ------------------------------------------------------------
 
@@ -13,34 +13,55 @@ librarian::shelf(tidyverse, readr, lme4, ggpubr, performance, suncalc,
 ### load necessary data ----
 all <- read_csv('local-data/snook-acc-model-data.csv') |>
       mutate(time_og = time,
-             time = hour(hms(time_og)),
-             y = mean_acceleration) |>
-      mutate(id = as.factor(id), station = as.factor(station)) |>
+             time    = hour(hms(time_og)),
+             y       = mean_acceleration) |>
+      mutate(id      = as.factor(id), station = as.factor(station)) |>
       dplyr::select(y, time, id, station)
 glimpse(all)
 
 # fit glmms with trigonometric terms --------------------------------------
-trig_null <- glmmTMB(y ~ 1 + (1|id) + (1|station), 
-                     family = gaussian(link = "log"),
-                     data = all)
+
+### models fit with Gaussian error distribution
+trig_null     <- glmmTMB(y ~ 1 + (1|id) + (1|station), 
+                         family = gaussian(link = "log"),
+                         data = all)
 
 trig_unimodal <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + (1|id) + (1|station),
                          family = gaussian(link = "log"),
                          data = all)
 
-trig_bimodal <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + cos(2*pi*time/12) + sin(2*pi*time/12) + (1|id) + (1|station),
-                        family = gaussian(link = "log"),
-                        data = all)
+trig_bimodal  <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + cos(2*pi*time/12) + sin(2*pi*time/12) + (1|id) + (1|station),
+                         family = gaussian(link = "log"),
+                         data = all)
 
-### model comparison ---
-performance::compare_performance(trig_null, trig_unimodal, trig_bimodal) |> 
+### models fit with Gammma error distributions
+trig_null_gamma     <- glmmTMB(y ~ 1 + (1|id) + (1|station), 
+                               family = Gamma(link = "log"),
+                               data = all)
+
+trig_unimodal_gamma <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + (1|id) + (1|station),
+                               family = Gamma(link = "log"),
+                               data = all)
+
+trig_bimodal_gamma  <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + cos(2*pi*time/12) + sin(2*pi*time/12) + (1|id) + (1|station),
+                               family = Gamma(link = "log"),
+                               data = all)
+
+### model comparison ----
+performance::compare_performance(trig_null, trig_unimodal, trig_bimodal,
+                                 trig_null_gamma, trig_unimodal_gamma, trig_bimodal_gamma) |> 
       mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|> 
-      # capture.output(file = "output/q1-trig-glmm-model-comparison.csv")
+# capture.output(file = "output/q1-trig-glmm-model-comparison.csv")
+
+check_model(trig_bimodal)
+check_residuals(trig_bimodal)
+check_autocorrelation(trig_bimodal)
+DHARMa::simulateResiduals(trig_bimodal, plot = TRUE)
+DHARMa::testDispersion(trig_bimodal)
 
 ### model summary ---
 # summary(trig_bimodal) |> 
 #       capture.output(file = "output/q1-bestfit-glmm-summary.xlsx")
-performance(trig_bimodal)
 
 ### generate file for model predictions/visualizations ---
 new_data <- expand.grid(
@@ -56,7 +77,7 @@ new_data <- expand.grid(
       )
 
 ### use best-fit model to predict new data ---
-pred <- predict(trig_bimodal, newdata = new_data, se.fit = TRUE)
+pred <- predict(trig_bimodal_gamma, newdata = new_data, se.fit = TRUE)
 new_data$fit <- pred$fit
 new_data$se.fit <- pred$se.fit
 
@@ -73,28 +94,29 @@ pred_fit <- new_data |>
 glmm_fit <- pred_fit |> mutate(model = "glmm") |> 
       select(model, x, y, lower, upper)
 
-bfm_glmm <- trig_bimodal
+bfm_glmm <- trig_bimodal_gamma
 
 # fit gamm analog for comparison ------------------------------------------
 snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
-                        family = gaussian(link = 'log'),
+                        family = Gamma(link = 'log'),
                         data = all)
+plot(snook_gamm, shade = TRUE)
 
-# double-check temporal autocorrelation -----------------------------------
-m_bam = bam(
-      formula(snook_gamm),
-      data = all,
-      method = "fREML",
-      rho = rho_est,
-      AR.start = c(TRUE, diff(all$time) != 1)
-)
-
-performance(m_bam)
-plot(m_bam)
-plot(snook_gamm)
-
-summary(snook_gamm)
-summary(m_bam)
+# # double-check temporal autocorrelation -----------------------------------
+# m_bam <- bam(
+#       formula(snook_gamm),
+#       data = all,
+#       method = "fREML",
+#       rho = rho_est,
+#       AR.start = c(TRUE, diff(all$time) != 1)
+# )
+# 
+# performance(m_bam)
+# plot(m_bam)
+# plot(snook_gamm)
+# 
+# summary(snook_gamm)
+# summary(m_bam)
 
 ### visualize model predictions ---
 snook_gamm_vis <- visreg(snook_gamm, "time", type = "conditional", scale = "response")
@@ -162,5 +184,5 @@ a <- snook_fit |>
             legend.title = element_text(face = 'bold', size = 8, color = "black"))
 a
 
-# ggsave('output/figs/snook-diel-pattern.png',
-#        dpi = 600, units= 'in', height = 4, width = 4)
+ggsave('output/figs/snook-diel-pattern.png',
+       dpi = 600, units= 'in', height = 4, width = 4)
