@@ -1,7 +1,7 @@
-###project: EctothermPredatorActivityDrivers
+###project: Snook Activity Patterns
 ###author(s): MW
 ###goal(s): set up activity data for analyses
-###date(s): February 2025
+###date(s): May 2026
 ###note(s): 
 
 # Housekeeping ------------------------------------------------------------
@@ -116,7 +116,7 @@ glimpse(bz)
 
 bz1 <- bz |> 
       group_by(id) |> 
-      summarise(first_date = min(first_date), last_date = max(last_date), .groups = "drop") %>%
+      summarise(first_date = min(first_date), last_date = max(last_date), .groups = "drop") |> 
       rowwise() |> 
       mutate(date = list(seq.Date(from = first_date, to = last_date, by = "day"))) |> 
       unnest(date)
@@ -164,6 +164,8 @@ acc1 <- acc |>
              sl_obs = sl) |> 
       select(-date_tagged) |> 
       arrange(id, date) |>
+      # handle zeros for growth rate on first day of observation
+      # not ultimately used in MS, but retained for posterity
       group_by(id) |> 
       mutate(daily_growth_g_vbf = fill_next_nonzero(daily_growth_g_vbf)) |> 
       ungroup()
