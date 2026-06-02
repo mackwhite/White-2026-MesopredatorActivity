@@ -106,12 +106,11 @@ tac_test <- all |>
       ungroup()
 
 tac <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
-                        family = Gamma(link = 'log'),
-                        data = tac_test)
-plot(tac, shade = TRUE)
+                        family = Gamma(link = 'log'), data = all)
+
 sim <- simulateResiduals(tac)
-sim_agg <- recalculateResiduals(sim, group = tac_test$time) 
-testTemporalAutocorrelation(sim_agg, time = sort(unique(tac_test$time)))
+sim_agg <- recalculateResiduals(sim, group = all$time) 
+testTemporalAutocorrelation(sim_agg, time = sort(unique(all$time)))
 
 # fit gamm with no autocorrelation structure ------------------------------
 snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
