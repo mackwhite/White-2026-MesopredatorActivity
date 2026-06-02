@@ -98,13 +98,6 @@ bfm_glmm <- trig_bimodal_gamma
 # fit gamm analog for comparison -----------------------------------------------
 # double-check temporal autocorrelation ----------------------------------------
 
-tac_test <- all |>
-      mutate(datetime = make_datetime(year, month, day, time, tz = "America/New_York")) |>
-      arrange(id, datetime) |>
-      group_by(id) |>
-      mutate(time_cont = as.numeric(difftime(datetime, min(datetime), units = "hours"))) |>
-      ungroup()
-
 tac <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
                         family = Gamma(link = 'log'), data = all)
 
