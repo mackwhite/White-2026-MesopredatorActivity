@@ -68,14 +68,14 @@ summary <- all |>
 
 # Model 1: Influence of size on activity ----------------------------------
 ### tensor-product gamm ---
-t_size <- gam(y ~ te(time, weight) + s(stage, k = 3) + s(temp, k = 3) + s(station, bs = "re"),
-              family = gaussian(link = 'log'),
+t_size <- gam(y ~ te(time, weight) + s(stage) + s(temp) + s(station, bs = "re"),
+              family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### cyclic gamm ---
-s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 3) + s(stage, k = 3) + s(temp, k = 3) + s(station, bs = "re"),
-              family = gaussian(link = 'log'),
+s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 3) + s(stage) + s(temp) + s(station, bs = "re"),
+              family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
@@ -194,14 +194,14 @@ b
 
 # Model 2: Influence of temperature on activity ---------------------------
 ### tensor-product gamm
-t_temp <- gam(y ~ te(time, temp) + s(stage, k = 3) + s(weight, k = 3) + s(station, bs = "re"),
-              family = gaussian(link = 'log'),
+t_temp <- gam(y ~ te(time, temp) + s(stage) + s(weight, k = 3) + s(station, bs = "re"),
+              family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### cyclic gamm ---
-s_temp <- gam(y ~ s(time, bs="cc") + s(temp, k = 3) + s(stage, k = 3) + s(weight, k = 3) + s(station, bs = "re"),
-              family = gaussian(link = 'log'),
+s_temp <- gam(y ~ s(time, bs="cc") + s(temp) + s(stage) + s(weight, k = 3) + s(station, bs = "re"),
+              family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
@@ -318,14 +318,14 @@ d
 
 # Model 3: Influence of hydrology on activity -----------------------------
 ### tensor-product gamm ---
-t_stage <- gam(y ~ te(time, stage) + s(temp, k = 3) + s(weight, k = 3) + s(station, bs = "re"),
-               family = gaussian(link = 'log'),
+t_stage <- gam(y ~ te(time, stage) + s(temp) + s(weight, k = 3) + s(station, bs = "re"),
+               family = Gamma(link = 'log'),
                data = all,
                method = "REML")
 
 ### cyclic gamm ---
-s_stage <- gam(y ~ s(time, bs="cc") + s(stage, k = 3) + s(temp, k = 3) + s(weight, k = 3) + s(station, bs = "re"),
-               family = gaussian(link = 'log'),
+s_stage <- gam(y ~ s(time, bs="cc") + s(stage) + s(temp) + s(weight, k = 3) + s(station, bs = "re"),
+               family = Gamma(link = 'log'),
                data = all,
                method = "REML")
 
