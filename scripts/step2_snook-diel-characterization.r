@@ -7,7 +7,7 @@
 
 ### load necessary libraries ----
 # install.packages("librarian")
-librarian::shelf(tidyverse, readr, lme4, ggpubr, performance, suncalc, nlme,
+librarian::shelf(tidyverse, readr, lme4, ggpubr, performance, suncalc, nlme, DHARMa,
                  scales, ggstats, ggeffects, visreg, mgcv, MuMIn, glmmTMB, corrplot)
 
 ### load necessary data ----
@@ -16,7 +16,8 @@ all <- read_csv('local-data/snook-acc-model-data.csv') |>
              time    = hour(hms(time_og)),
              y       = mean_acceleration) |>
       mutate(id      = as.factor(id), station = as.factor(station)) |>
-      dplyr::select(y, time, id, station, year, month, day)
+      dplyr::select(y, time, id, station, year, month, day) |> 
+      arrange(id, year, month, day)
 glimpse(all)
 
 # fit glmms with trigonometric terms --------------------------------------
@@ -94,25 +95,29 @@ glmm_fit <- pred_fit |> mutate(model = "glmm") |>
 
 bfm_glmm <- trig_bimodal_gamma
 
-# fit gamm analog for comparison ------------------------------------------
-snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
-                        family = Gamma(link = 'log'),
-                        data = all)
-plot(snook_gamm, shade = TRUE)
+# fit gamm analog for comparison -----------------------------------------------
+# double-check temporal autocorrelation ----------------------------------------
 
-# # double-check temporal autocorrelation -----------------------------------
-tc_test <- all |>
+tac_test <- all |>
       mutate(datetime = make_datetime(year, month, day, time, tz = "America/New_York")) |>
       arrange(id, datetime) |>
       group_by(id) |>
       mutate(time_cont = as.numeric(difftime(datetime, min(datetime), units = "hours"))) |>
       ungroup()
 
-tc_test_mod <- gamm(y ~ s(time, bs="cc") + s(id, bs="re") + s(station, bs="re"),
-                 family = Gamma(link="log"), data = all)
+tac <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
+                        family = Gamma(link = 'log'),
+                        data = tac_test)
+plot(tac, shade = TRUE)
+sim <- simulateResiduals(tac)
+sim_agg <- recalculateResiduals(sim, group = tac_test$time) 
+testTemporalAutocorrelation(sim_agg, time = sort(unique(tac_test$time)))
 
-plot(Variogram(tc_test_mod$lme, form = ~ time_cont | id,
-               resType = "normalized", data = tc_test))
+# fit gamm with no autocorrelation structure ------------------------------
+snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
+                        family = Gamma(link = 'log'),
+                        data = all)
+plot(snook_gamm, shade = TRUE)
 
 ### visualize model predictions ---
 snook_gamm_vis <- visreg(snook_gamm, "time", type = "conditional", scale = "response")
