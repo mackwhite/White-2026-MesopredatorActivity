@@ -7,7 +7,7 @@
 
 ### load necessary libraries ----
 # install.packages("librarian")
-librarian::shelf(tidyverse, readr, lme4, ggpubr, performance, suncalc,
+librarian::shelf(tidyverse, readr, lme4, ggpubr, performance, suncalc, nlme,
                  scales, ggstats, ggeffects, visreg, mgcv, MuMIn, glmmTMB, corrplot)
 
 ### load necessary data ----
@@ -16,7 +16,7 @@ all <- read_csv('local-data/snook-acc-model-data.csv') |>
              time    = hour(hms(time_og)),
              y       = mean_acceleration) |>
       mutate(id      = as.factor(id), station = as.factor(station)) |>
-      dplyr::select(y, time, id, station)
+      dplyr::select(y, time, id, station, year, month, day)
 glimpse(all)
 
 # fit glmms with trigonometric terms --------------------------------------
@@ -53,11 +53,9 @@ performance::compare_performance(trig_null, trig_unimodal, trig_bimodal,
       mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|> 
 # capture.output(file = "output/q1-trig-glmm-model-comparison.csv")
 
-check_model(trig_bimodal)
-check_residuals(trig_bimodal)
-check_autocorrelation(trig_bimodal)
-DHARMa::simulateResiduals(trig_bimodal, plot = TRUE)
-DHARMa::testDispersion(trig_bimodal)
+performance::check_model(trig_bimodal_gamma)
+performance::check_collinearity(trig_bimodal_gamma)
+performance::check_convergence(trig_bimodal_gamma)
 
 ### model summary ---
 # summary(trig_bimodal) |> 
@@ -101,22 +99,52 @@ snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re
                         family = Gamma(link = 'log'),
                         data = all)
 plot(snook_gamm, shade = TRUE)
+# rho_est <- acf(residuals(snook_gamm, type = "pearson"), plot = FALSE)$acf[2]
+# check_autocorrelation(snook_gamm)
+# 
+# sim <- simulate_residuals(snook_gamm)
+# plot(sim)
+# sim_agg <- DHARMa::recalculateResiduals(sim, group = all$time)
+# DHARMa::testTemporalAutocorrelation(sim_agg, time = sort(unique(all$time)))
+# 
+# test_mod <- mgcv::bam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
+#                       family = Gamma(link = 'log'),
+#                       data = all,
+#                       rho = rho_est,
+#                       method = 'fREML',
+#                       discrete = TRUE
+# )
+# plot(test_mod, shade = TRUE)
+# compare_performance(snook_gamm, test_mod)
 
 # # double-check temporal autocorrelation -----------------------------------
-# m_bam <- bam(
-#       formula(snook_gamm),
-#       data = all,
-#       method = "fREML",
-#       rho = rho_est,
-#       AR.start = c(TRUE, diff(all$time) != 1)
-# )
-# 
-# performance(m_bam)
-# plot(m_bam)
-# plot(snook_gamm)
-# 
-# summary(snook_gamm)
-# summary(m_bam)
+tc_test <- all |>
+      mutate(datetime = make_datetime(year, month, day, time, tz = "America/New_York")) |>
+      arrange(id, datetime) |>
+      group_by(id) |>
+      mutate(time_cont = as.numeric(difftime(datetime, min(datetime), units = "hours"))) |>
+      ungroup()
+
+tc_test_mod <- gamm(y ~ s(time, bs="cc") + s(id, bs="re") + s(station, bs="re"),
+                 family = Gamma(link="log"), data = all)
+
+plot(Variogram(tc_test_mod$lme, form = ~ time_cont | id,
+               resType = "normalized", data = tc_test))
+
+m_bam <- bam(
+      formula(snook_gamm),
+      data = all,
+      method = "fREML",
+      rho = rho_est,
+      AR.start = c(TRUE, diff(all$time) != 1)
+)
+
+performance(m_bam)
+plot(m_bam)
+plot(snook_gamm)
+
+summary(snook_gamm)
+summary(m_bam)
 
 ### visualize model predictions ---
 snook_gamm_vis <- visreg(snook_gamm, "time", type = "conditional", scale = "response")

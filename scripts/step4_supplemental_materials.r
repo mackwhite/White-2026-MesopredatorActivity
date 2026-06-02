@@ -1,7 +1,7 @@
-###project: EctothermPredatorActivityDrivers
+###project: Snook Activity Patterns
 ###author(s): MW
 ###goal(s): 
-###date(s): February 2025
+###date(s): May 2026
 ###note(s): 
 # Housekeeping ------------------------------------------------------------
 
@@ -260,3 +260,80 @@ all |>
             days_obs = n_distinct(date)) |> 
       ungroup() #|> 
       # capture.output(file = "output/alltagger-summary-info.csv")
+
+
+# additional metrics requested in review ---------------------------------------
+
+dat <- read_csv('local-data/snook-accelerometer-data.csv') |> filter(distance >= 21)
+tags <- dat |> dplyr::select(id, tl, sl, weight, date_tagged) |> distinct()
+sites <- dat |> dplyr::select(station, distance, latitude, longitude) |> distinct()
+
+
+# tag burden -------------------------------------------------------------------
+tb <- tags |> 
+      ### assign tag weight (g) in air (Jepsen et al 2005, no more than 2%)
+      mutate(tag_g_air = case_when(
+            id == '5043' ~ 5.0,
+            id == '5042' ~ 5.0,
+            id == '5040' ~ 5.0,
+            id == '5039' ~ 5.0,
+            id == '5367' ~ 9.7,
+            id == '5363' ~ 9.7,
+            id == '5361' ~ 9.7,
+            id == '5362' ~ 9.7,
+      )) |>
+      ### assign tag weight (g) in water (Jepsen et al 2005, no more than 1.25%)
+      mutate(tag_g_water = case_when(
+            id == '5043' ~ 2.9,
+            id == '5042' ~ 2.9,
+            id == '5040' ~ 2.9,
+            id == '5039' ~ 2.9,
+            id == '5367' ~ 4.8,
+            id == '5363' ~ 4.8,
+            id == '5361' ~ 4.8,
+            id == '5362' ~ 4.8,
+      )) |>
+      ### calculate tag burden
+      mutate(burden_air   = (tag_g_air/weight)*100,
+             burden_water = (tag_g_water/weight)*100) |> 
+      ### calculate summary stats for burden by tag size
+      mutate(
+            tag_size = case_when(
+                  tag_g_water == 2.9 ~ 'V9a',
+                  TRUE ~ 'V13a'
+            )
+      ) |> 
+      # group_by(tag_size) |> 
+      summarize(mean = mean(burden_air),
+                sd = sd(burden_air),
+                min_burden = min(burden_air),
+                max_burden = max(burden_air),
+                .groups = 'drop')
+print(tb)
+
+# tracking summary -------------------------------------------------------------
+tracking_summary <- dat |>
+      mutate(date_tagged = mdy(date_tagged),         # convert from "1/13/2024"
+             detection_date = as_date(datetime)) |>  # pull date from datetime
+      group_by(id) |>
+      summarize(
+            date_tagged       = first(date_tagged),
+            first_detection   = min(detection_date),
+            last_detection    = max(detection_date),
+            n_detections      = n(),
+            n_tracking_days   = n_distinct(detection_date),
+            duration_days     = as.numeric(last_detection - date_tagged),
+            .groups = 'drop'
+      ) |> 
+      summarize(
+            mean_duration       = mean(duration_days),
+            sd_duration         = sd(duration_days),
+            min_duration        = min(duration_days),
+            max_duration        = max(duration_days),
+            mean_tracking_days  = mean(n_tracking_days),
+            sd_tracking_days    = sd(n_tracking_days),
+            min_tracking_days   = min(n_tracking_days),
+            max_tracking_days   = max(n_tracking_days)
+      ) |> 
+      print()
+

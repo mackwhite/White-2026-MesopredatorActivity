@@ -1,7 +1,7 @@
-###project: EctothermPredatorActivityDrivers
-###author(s): MW, ROS
+###project: Snook Activity Patterns
+###author(s): MW, JR, ROS, WRJ
 ###goal(s): 
-###date(s): February 2025
+###date(s): May 2026
 ###note(s): 
 # Housekeeping ------------------------------------------------------------
 
