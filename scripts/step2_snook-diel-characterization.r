@@ -99,23 +99,6 @@ snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re
                         family = Gamma(link = 'log'),
                         data = all)
 plot(snook_gamm, shade = TRUE)
-# rho_est <- acf(residuals(snook_gamm, type = "pearson"), plot = FALSE)$acf[2]
-# check_autocorrelation(snook_gamm)
-# 
-# sim <- simulate_residuals(snook_gamm)
-# plot(sim)
-# sim_agg <- DHARMa::recalculateResiduals(sim, group = all$time)
-# DHARMa::testTemporalAutocorrelation(sim_agg, time = sort(unique(all$time)))
-# 
-# test_mod <- mgcv::bam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
-#                       family = Gamma(link = 'log'),
-#                       data = all,
-#                       rho = rho_est,
-#                       method = 'fREML',
-#                       discrete = TRUE
-# )
-# plot(test_mod, shade = TRUE)
-# compare_performance(snook_gamm, test_mod)
 
 # # double-check temporal autocorrelation -----------------------------------
 tc_test <- all |>
@@ -130,21 +113,6 @@ tc_test_mod <- gamm(y ~ s(time, bs="cc") + s(id, bs="re") + s(station, bs="re"),
 
 plot(Variogram(tc_test_mod$lme, form = ~ time_cont | id,
                resType = "normalized", data = tc_test))
-
-m_bam <- bam(
-      formula(snook_gamm),
-      data = all,
-      method = "fREML",
-      rho = rho_est,
-      AR.start = c(TRUE, diff(all$time) != 1)
-)
-
-performance(m_bam)
-plot(m_bam)
-plot(snook_gamm)
-
-summary(snook_gamm)
-summary(m_bam)
 
 ### visualize model predictions ---
 snook_gamm_vis <- visreg(snook_gamm, "time", type = "conditional", scale = "response")
