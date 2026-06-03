@@ -336,4 +336,3 @@ tracking_summary <- dat |>
             max_tracking_days   = max(n_tracking_days)
       ) |> 
       print()
-
