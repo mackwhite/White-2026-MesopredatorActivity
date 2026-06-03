@@ -160,12 +160,10 @@ a <- snook_fit |>
       theme_bw() +
       labs(x = "Time of Day (h)", y = expression(bold("Predicted Activity (m/s"^2*")")),
            fill = "Model",
-           color = "Model",
            linetype = "Model") +
       scale_x_continuous(breaks = c(0,4,8,12,16,20,24)) +
-      scale_y_continuous(breaks = c(0.35,0.40,0.45,0.50,0.55,0.60), limits = c(0.32,0.6251)) +
+      scale_y_continuous(breaks = c(0.35,0.40,0.45,0.50,0.55,0.60), limits = c(0.32,0.636)) +
       scale_fill_manual(values = c("GLMM" = "#1f78b4", "GAMM" = "#33a02c")) +
-      scale_color_manual(values = c("GLMM" = "#1f78b4", "GAMM" = "#33a02c")) +
       scale_linetype_manual(values = c("GLMM" = "solid", "GAMM" = "dashed")) +
       theme(axis.text = element_text(size = 10, face = "bold", colour = "black"),
             axis.title = element_text(size = 12, face = "bold", colour = "black"),
