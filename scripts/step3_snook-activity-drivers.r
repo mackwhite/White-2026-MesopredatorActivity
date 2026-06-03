@@ -68,31 +68,31 @@ summary <- all |>
 
 # Model 1: Influence of size on activity ----------------------------------
 ### tensor-product gamm ---
-t_size <- gam(y ~ te(time, weight) + s(stage) + s(temp) + s(station, bs = "re"),
+t_size <- gam(y ~ te(time, weight) + s(stage, k = 10) + s(temp, k = 10) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### cyclic gamm ---
-s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 3) + s(stage) + s(temp) + s(station, bs = "re"),
+s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 4) + s(stage, k = 10) + s(temp, k = 10) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### compare models ---
 performance::compare_performance(t_size, s_size)|> 
-      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|> 
-      # capture.output(file = "output/tables/size-model-comparison.csv")
+      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |> 
+      capture.output(file = "output/tables/size-model-comparison.csv")
 
 concurvity(t_size)
 performance(t_size)
 summary.gam(t_size)
 summary.gam(s_size)
-size_dev_ratio <- 19.6/15.1
+size_dev_ratio <- 18.7/15.7
 bfm <- t_size
 
 ### clear up some memory ---
-keep <- c('all', 'bfm', 't_size', 's_size')
+keep <- c('all', 'bfm', 't_size', 's_size', 'size_dev_ratio')
 rm(list = setdiff(ls(), keep))
 
 ### smoothed interaction effect of weight and time ----
@@ -176,7 +176,7 @@ b <- pred_fit |>
       theme_bw() +
       labs(x = "Weight (kg)", y = expression(bold("Predicted Activity (m/s"^2*")"))) +
       scale_x_continuous(breaks = c(0,1,2,3,4,5,6)) +
-      scale_y_continuous(breaks = c(0.25,0.30,0.35,0.40,0.45), limits = c(0.25,0.45)) +
+      scale_y_continuous(breaks = c(0.30,0.35,0.40,0.45,0.50), limits = c(0.295,0.512)) +
       theme(axis.text = element_text(size = 12, face = "bold", colour = "black"),
             axis.title = element_text(size = 14, face = "bold", colour = "black"),
             panel.grid.major = element_blank(),
@@ -190,35 +190,35 @@ b <- pred_fit |>
             legend.title = element_text(face = 'bold'))
 b
 
-# summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-size.csv")
+summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-size.csv")
 
 # Model 2: Influence of temperature on activity ---------------------------
 ### tensor-product gamm
-t_temp <- gam(y ~ te(time, temp) + s(stage) + s(weight, k = 3) + s(station, bs = "re"),
+t_temp <- gam(y ~ te(time, temp) + s(stage, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### cyclic gamm ---
-s_temp <- gam(y ~ s(time, bs="cc") + s(temp) + s(stage) + s(weight, k = 3) + s(station, bs = "re"),
+s_temp <- gam(y ~ s(time, bs="cc") + s(temp, k = 10) + s(stage, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### compare models ---
 performance::compare_performance(t_temp, s_temp) |>
-      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|>
-      # capture.output(file = "output/tables/temp-model-comparison.csv")
+      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |>
+      capture.output(file = "output/tables/temp-model-comparison.csv")
 
 concurvity(t_temp)
 performance(t_temp)
 summary.gam(t_temp)
 summary.gam(s_temp)
-temp_dev_ratio <- 18.7/15.1
+temp_dev_ratio <- 17.9/15.7
 bfm <- t_temp
 
 ### clear up some memory ---
-keep <- c('all', 'bfm', "a", "b", 't_size', 's_size', 't_temp', 's_temp')
+keep <- c('all', 'bfm', "a", "b", 't_size', 's_size', 't_temp', 's_temp', 'size_dev_ratio', 'temp_dev_ratio')
 rm(list = setdiff(ls(), keep))
 
 ## smoothed interaction effect of temp and time ----
@@ -300,7 +300,7 @@ d <- pred_fit |>
       theme_bw() +
       labs(x = "Temperature (°C)", y = expression(bold("Predicted Activity (m/s"^2*")"))) +
       scale_x_continuous(breaks = c(18,20,22,24,26,28,30,32,34)) +
-      scale_y_continuous(breaks = c(0.25,0.30,0.35,0.40,0.45), limits = c(0.25,0.45)) +
+      scale_y_continuous(breaks = c(0.30,0.35,0.40,0.45,0.50), limits = c(0.295,0.512)) +
       theme(axis.text = element_text(size = 12, face = "bold", colour = "black"),
             axis.title = element_text(size = 14, face = "bold", colour = "black"),
             panel.grid.major = element_blank(),
@@ -314,35 +314,35 @@ d <- pred_fit |>
             legend.title = element_text(face = 'bold'))
 d
 
-# summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-temp.csv")
+summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-temp.csv")
 
 # Model 3: Influence of hydrology on activity -----------------------------
 ### tensor-product gamm ---
-t_stage <- gam(y ~ te(time, stage) + s(temp) + s(weight, k = 3) + s(station, bs = "re"),
+t_stage <- gam(y ~ te(time, stage) + s(temp, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
                family = Gamma(link = 'log'),
                data = all,
                method = "REML")
 
 ### cyclic gamm ---
-s_stage <- gam(y ~ s(time, bs="cc") + s(stage) + s(temp) + s(weight, k = 3) + s(station, bs = "re"),
+s_stage <- gam(y ~ s(time, bs="cc") + s(stage, k = 10) + s(temp, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
                family = Gamma(link = 'log'),
                data = all,
                method = "REML")
 
 ### compare models ---
 performance::compare_performance(t_stage, s_stage) |>
-      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|>
-      # capture.output(file = "output/tables/stage-model-comparison.csv")
+      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |>
+      capture.output(file = "output/tables/stage-model-comparison.csv")
 
 concurvity(t_stage)
 performance(t_stage)
 summary.gam(t_stage)
-summary(s_stage)
-stage_dev_ratio <- 16.9/15.1
+summary.gam(s_stage)
+stage_dev_ratio <- 14.9/15.7
 bfm <- t_stage
 
 ### clear up some memory ---
-keep <- c('all', 'bfm', "a", "b", 'c', 'd', 't_size', 's_size', 't_temp', 's_temp', 't_stage', 's_stage')
+keep <- c('all', 'bfm', "a", "b", 'c', 'd', 't_size', 's_size', 't_temp', 's_temp', 't_stage', 's_stage', 'size_dev_ratio', 'temp_dev_ratio', 'stage_dev_ratio')
 rm(list = setdiff(ls(), keep))
 
 ### smoothed interaction effect of stage and time ----
@@ -420,11 +420,11 @@ pred_fit <- new_data |>
 f <- pred_fit |> 
       ggplot(aes(x = x, y = y)) +
       geom_ribbon(aes(ymin = lower, ymax = upper), alpha = 0.3) +
-      geom_line(linewidth = 2, linetype = "dashed") +
+      geom_line(linewidth = 2, linetype = "solid") +
       theme_bw() +
       labs(x = "Marsh Stage (cm)", y = expression(bold("Predicted Activity (m/s"^2*")"))) +
       scale_x_continuous(breaks = c(40,50,60,70,80)) +
-      scale_y_continuous(breaks = c(0.25,0.30,0.35,0.40,0.45), limits = c(0.25,0.45)) +
+      scale_y_continuous(breaks = c(0.30,0.35,0.40,0.45,0.50), limits = c(0.295,0.512)) +
       theme(axis.text = element_text(size = 12, face = "bold", colour = "black"),
             axis.title = element_text(size = 14, face = "bold", colour = "black"),
             panel.grid.major = element_blank(),
@@ -438,51 +438,50 @@ f <- pred_fit |>
             legend.title = element_text(face = 'bold'))
 f
 
-# summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-stage.csv")
+summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-stage.csv")
 
 # Clear up memory and visualize best-fit models ---------------------------
 keep <- c('all', "a", "b", 'c', 'd', 'e', 'f', 't_size', 's_size', 't_temp', 's_temp', 't_stage', 's_stage')
 rm(list = setdiff(ls(), keep))
 
 ## arrange panels for figures 3:5 ----
-
 ### figure three ---
 size_arranged <- ggarrange(a,b, ncol = 2, align = "h", labels = c("a", "b"), common.legend = TRUE,
                            legend = "bottom")
 size_arranged
 
-# ggsave('output/figs/size-activity-relationships.png',
-#        dpi = 600, units= 'in', bg = 'white', height = 4, width = 8)
+ggsave('output/figs/size-activity-relationships.png',
+       dpi = 600, units= 'in', bg = 'white', height = 4, width = 8)
 
 ### figure four ---
 temp_arranged <- ggarrange(c,d, ncol = 2, align = "h", labels = c("a", "b"), common.legend = TRUE,
                            legend = "bottom")
 temp_arranged
 
-# ggsave('output/figs/temp-activity-relationships.png',
-#        dpi = 600, units= 'in', bg = 'white', height = 4, width = 8)
+ggsave('output/figs/temp-activity-relationships.png',
+       dpi = 600, units= 'in', bg = 'white', height = 4, width = 8)
 
 ### figure five ---
 stage_arranged <- ggarrange(e,f, ncol = 2, align = "h", labels = c("a", "b"), common.legend = TRUE,
                            legend = "bottom")
 stage_arranged
 
-# ggsave('output/figs/stage-activity-relationships.png',
-#        dpi = 600, units= 'in', bg = 'white', height = 4, width = 8)
+ggsave('output/figs/stage-activity-relationships.png',
+       dpi = 600, units= 'in', bg = 'white', height = 4, width = 8)
 
 ### simple summary stats for results ---
 ### summary stats for manuscript ----
 size_arranged
 summary.gam(t_size)
-size_dev_ratio <- 1.30
+size_dev_ratio
 
 temp_arranged
 summary.gam(t_temp)
-temp_dev_ratio <- 1.24
+temp_dev_ratio
 
 stage_arranged
 summary.gam(t_stage)
-stage_dev_ratio <- 1.12
+stage_dev_ratio
 
 glimpse(all)
 
@@ -495,8 +494,7 @@ act_summary <- all |>
       )
 glimpse(act_summary)
 
-# model checks ------------------------------------------------------------
-gam.check(t_size)
-gam.check(s_size)
-gam.check(t_temp)
-gam.check(t_stage)
+# summary information for Ref.df and edf ----------------------------------
+summary(t_size)
+summary(t_temp)
+summary(s_stage)
