@@ -99,17 +99,19 @@ bfm_glmm <- trig_bimodal_gamma
 # double-check temporal autocorrelation ----------------------------------------
 
 tac <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
-                        family = Gamma(link = 'log'), data = all)
+                        family = Gamma(link = 'log'), data = all, method = "REML")
 
 sim <- simulateResiduals(tac)
 sim_agg <- recalculateResiduals(sim, group = all$time) 
 testTemporalAutocorrelation(sim_agg, time = sort(unique(all$time)))
+gam.check(tac)
 
 # fit gamm with no autocorrelation structure ------------------------------
 snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
                         family = Gamma(link = 'log'),
-                        data = all)
-plot(snook_gamm, shade = TRUE)
+                        data = all, method = "REML")
+summary(snook_gamm)
+gam.check(snook_gamm)
 
 ### visualize model predictions ---
 snook_gamm_vis <- visreg(snook_gamm, "time", type = "conditional", scale = "response")
