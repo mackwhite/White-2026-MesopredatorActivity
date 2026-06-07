@@ -8,7 +8,7 @@
 ### load necessary libraries ----
 # install.packages("librarian")
 librarian::shelf(tidyverse, readr, lme4, ggpubr, performance, suncalc, nlme, DHARMa,
-                 scales, ggstats, ggeffects, visreg, mgcv, MuMIn, glmmTMB, corrplot)
+                 scales, ggstats, ggeffects, visreg, mgcv, MuMIn, glmmTMB, corrplot, suncalc)
 
 ### load necessary data ----
 all <- read_csv('local-data/snook-acc-model-data.csv') |>
@@ -148,6 +148,45 @@ snook_fit <- rbind(glmm_fit, gamm_fit) |>
 keep <- c("all", "snook_fit", 'gamm_fit')
 rm(list = setdiff(ls(), keep))
 
+
+# Pull crepuscular information for Shark River ---------------------------------
+
+### designate coordinates for reference
+lat <- 25.4413
+lon <- -80.9060
+
+### provide range of dates for taking range/mean
+dates <- seq(as.Date("2024-01-13"), as.Date("2024-12-14"), by = "day")
+
+### pull information
+sun_times <- getSunlightTimes(
+      date = dates,
+      lat = lat, lon = lon,
+      keep = c("dawn", "sunrise", "sunset", "dusk"),
+      tz = "America/New_York"
+) |> 
+      
+      ### extract the decimal hour to align with data in figure
+      mutate(
+            dawn_hour    = hour(dawn)    + minute(dawn)    / 60,
+            sunrise_hour = hour(sunrise) + minute(sunrise) / 60,
+            sunset_hour  = hour(sunset)  + minute(sunset)  / 60,
+            dusk_hour    = hour(dusk)    + minute(dusk)    / 60
+      ) |> 
+      
+      ### take the summary stats for all the metrics :D
+      summarize(
+            ### anywhere a column ends in '_hour'
+            across(ends_with('_hour'), 
+            ### take the mean, min, and max and label it with the function
+            list(mean = mean, min = min, max = max),
+            ### but in addition to the function (i.e., 'fn'), start column with og column (i.e., col) name
+            .names = '{.col}_{.fn}'
+      ))
+
+print(sun_times)
+
+# Visualize the model predictions together w crepusc info ----------------------
 a <- snook_fit |> 
       rename(Model = model) |> 
       mutate(Model = case_when(
@@ -155,6 +194,18 @@ a <- snook_fit |>
             Model == "glmm" ~ "GLMM"
       )) |> 
       ggplot(aes(x = x)) +
+      ### morning crepuscular period
+      annotate("rect",
+               xmin = sun_times$dawn_hour_min,
+               xmax = sun_times$sunrise_hour_max,
+               ymin = -Inf, ymax = Inf,
+               fill = "grey", alpha = 0.15) +
+      ### evening crepuscular period
+      annotate("rect",
+               xmin = sun_times$sunset_hour_min,
+               xmax = sun_times$dusk_hour_max,
+               ymin = -Inf, ymax = Inf,
+               fill = "grey", alpha = 0.15) +
       geom_ribbon(aes(ymin = lower, ymax = upper, fill = Model), alpha = 0.4) +
       geom_line(aes(y = y, linetype = Model), linewidth = 2) +
       theme_bw() +
@@ -162,7 +213,7 @@ a <- snook_fit |>
            fill = "Model",
            linetype = "Model") +
       scale_x_continuous(breaks = c(0,4,8,12,16,20,24)) +
-      scale_y_continuous(breaks = c(0.35,0.40,0.45,0.50,0.55,0.60), limits = c(0.32,0.636)) +
+      scale_y_continuous(breaks = c(0.35,0.45,0.55,0.65), limits = c(0.32,0.65)) +
       scale_fill_manual(values = c("GLMM" = "#1f78b4", "GAMM" = "#33a02c")) +
       scale_linetype_manual(values = c("GLMM" = "solid", "GAMM" = "dashed")) +
       theme(axis.text = element_text(size = 10, face = "bold", colour = "black"),
