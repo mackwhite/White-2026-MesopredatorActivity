@@ -95,11 +95,7 @@ summary.gam(t_size)
 summary.gam(s_size)
 size_dev_ratio <- 18.7/15.7
 bfm <- t_size
-set.seed(1)
-mgcv::k.check(t_size)
-mgcv::k.check(s_size)
 
-### clear up some memory ---
 keep <- c('all', 'bfm', 't_size', 's_size', 'size_dev_ratio')
 rm(list = setdiff(ls(), keep))
 
@@ -449,7 +445,8 @@ f
 summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-stage.csv")
 
 # Clear up memory and visualize best-fit models ---------------------------
-keep <- c('all', "a", "b", 'c', 'd', 'e', 'f', 't_size', 's_size', 't_temp', 's_temp', 't_stage', 's_stage')
+keep <- c('all', "a", "b", 'c', 'd', 'e', 'f', 't_size', 's_size', 't_temp', 's_temp', 't_stage', 's_stage',
+          'size_dev_ratio', 'temp_dev_ratio', 'stage_dev_ratio')
 rm(list = setdiff(ls(), keep))
 
 ## arrange panels for figures 3:5 ----
