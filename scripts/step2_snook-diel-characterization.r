@@ -98,7 +98,7 @@ bfm_glmm <- trig_bimodal_gamma
 # fit gamm analog for comparison -----------------------------------------------
 # double-check temporal autocorrelation ----------------------------------------
 
-tac <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
+tac <- mgcv::gam(y ~ s(time, bs="cc", k = 10) + s(id, bs="re")+ s(station, bs="re"),
                         family = Gamma(link = 'log'), data = all, method = "REML")
 
 sim <- simulateResiduals(tac)
@@ -106,7 +106,7 @@ sim_agg <- recalculateResiduals(sim, group = all$time)
 testTemporalAutocorrelation(sim_agg, time = sort(unique(all$time)))
 
 # fit gamm with no autocorrelation structure ------------------------------
-snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
+snook_gamm <- mgcv::gam(y ~ s(time, bs="cc", k = 10) + s(id, bs="re")+ s(station, bs="re"),
                         family = Gamma(link = 'log'),
                         data = all, method = "REML")
 summary(snook_gamm)
