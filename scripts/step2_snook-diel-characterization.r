@@ -105,7 +105,7 @@ sim <- simulateResiduals(tac)
 sim_agg <- recalculateResiduals(sim, group = all$time) 
 testTemporalAutocorrelation(sim_agg, time = sort(unique(all$time)))
 
-# fit gamm with no autocorrelation structure ------------------------------
+# fit gamm ---------------------------------------------------------------------
 snook_gamm <- mgcv::gam(y ~ s(time, bs="cc", k = 10) + s(id, bs="re")+ s(station, bs="re"),
                         family = Gamma(link = 'log'),
                         data = all, method = "REML")
