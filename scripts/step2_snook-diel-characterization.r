@@ -51,8 +51,8 @@ trig_bimodal_gamma  <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + cos(2
 ### model comparison ----
 performance::compare_performance(trig_null, trig_unimodal, trig_bimodal,
                                  trig_null_gamma, trig_unimodal_gamma, trig_bimodal_gamma) |> 
-      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|> 
-# capture.output(file = "output/q1-trig-glmm-model-comparison.csv")
+      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |> 
+      capture.output(file = "output/q1-trig-glmm-model-comparison.csv")
 
 performance::check_model(trig_bimodal_gamma)
 performance::check_collinearity(trig_bimodal_gamma)
@@ -98,19 +98,21 @@ bfm_glmm <- trig_bimodal_gamma
 # fit gamm analog for comparison -----------------------------------------------
 # double-check temporal autocorrelation ----------------------------------------
 
-tac <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
+tac <- mgcv::gam(y ~ s(time, bs="cc", k = 10) + s(id, bs="re", k = 10)+ s(station, bs="re"),
                         family = Gamma(link = 'log'), data = all, method = "REML")
 
 sim <- simulateResiduals(tac)
 sim_agg <- recalculateResiduals(sim, group = all$time) 
 testTemporalAutocorrelation(sim_agg, time = sort(unique(all$time)))
-gam.check(tac)
 
 # fit gamm with no autocorrelation structure ------------------------------
-snook_gamm <- mgcv::gam(y ~ s(time, bs="cc") + s(id, bs="re")+ s(station, bs="re"),
+snook_gamm <- mgcv::gam(y ~ s(time, bs="cc", k = 10) + s(id, bs="re", k = 10)+ s(station, bs="re"),
                         family = Gamma(link = 'log'),
                         data = all, method = "REML")
 summary(snook_gamm)
+set.seed(1)
+k.check(snook_gamm)
+set.seed(1)
 gam.check(snook_gamm)
 
 ### visualize model predictions ---
@@ -131,14 +133,14 @@ glimpse(glmm_fit)
 
 ### compare performance of gamm and glmm model ---
 compare_performance(bfm_glmm, snook_gamm) |> 
-      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) #|> 
-      # capture.output(file = "output/tables/q1-gamm-glmm-comparison.csv")
+      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |> 
+      capture.output(file = "output/tables/q1-gamm-glmm-comparison.csv")
 
 ### model summary for gamm ---
 summary(snook_gamm)
 performance(snook_gamm)
-# summary.gam(snook_gamm) |> 
-#       capture.output(file = "output/tables/q1-gamm-summary.xlsx")
+summary.gam(snook_gamm) |>
+      capture.output(file = "output/tables/q1-gamm-summary.xlsx")
 
 ### join model fit datasets together for visualizations ---
 snook_fit <- rbind(glmm_fit, gamm_fit) |> 
