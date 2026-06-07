@@ -68,13 +68,18 @@ summary <- all |>
 
 # Model 1: Influence of size on activity ----------------------------------
 ### tensor-product gamm ---
-t_size <- gam(y ~ te(time, weight) + s(stage, k = 10) + s(temp, k = 10) + s(station, bs = "re"),
+t_size <- gam(y ~ te(time, weight) + s(stage) + s(temp) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### cyclic gamm ---
-s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 4) + s(stage, k = 10) + s(temp, k = 10) + s(station, bs = "re"),
+s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 4) + s(stage) + s(temp) + s(station, bs = "re"),
+              family = Gamma(link = 'log'),
+              data = all,
+              method = "REML")
+
+s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 4) + s(stage) + s(temp) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
@@ -90,6 +95,9 @@ summary.gam(t_size)
 summary.gam(s_size)
 size_dev_ratio <- 18.7/15.7
 bfm <- t_size
+set.seed(1)
+mgcv::k.check(t_size)
+mgcv::k.check(s_size)
 
 ### clear up some memory ---
 keep <- c('all', 'bfm', 't_size', 's_size', 'size_dev_ratio')
@@ -194,13 +202,13 @@ summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-size.c
 
 # Model 2: Influence of temperature on activity ---------------------------
 ### tensor-product gamm
-t_temp <- gam(y ~ te(time, temp) + s(stage, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
+t_temp <- gam(y ~ te(time, temp) + s(stage) + s(weight, k = 4) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
 
 ### cyclic gamm ---
-s_temp <- gam(y ~ s(time, bs="cc") + s(temp, k = 10) + s(stage, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
+s_temp <- gam(y ~ s(time, bs="cc") + s(temp) + s(stage) + s(weight, k = 4) + s(station, bs = "re"),
               family = Gamma(link = 'log'),
               data = all,
               method = "REML")
@@ -318,13 +326,13 @@ summary.gam(bfm) |> capture.output(file = "output/tables/q2-model-summary-temp.c
 
 # Model 3: Influence of hydrology on activity -----------------------------
 ### tensor-product gamm ---
-t_stage <- gam(y ~ te(time, stage) + s(temp, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
+t_stage <- gam(y ~ te(time, stage) + s(temp) + s(weight, k = 4) + s(station, bs = "re"),
                family = Gamma(link = 'log'),
                data = all,
                method = "REML")
 
 ### cyclic gamm ---
-s_stage <- gam(y ~ s(time, bs="cc") + s(stage, k = 10) + s(temp, k = 10) + s(weight, k = 4) + s(station, bs = "re"),
+s_stage <- gam(y ~ s(time, bs="cc") + s(stage) + s(temp) + s(weight, k = 4) + s(station, bs = "re"),
                family = Gamma(link = 'log'),
                data = all,
                method = "REML")
