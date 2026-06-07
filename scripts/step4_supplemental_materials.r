@@ -117,6 +117,9 @@ s1 |>
                              rot = 90)
       )
 
+ggsave('output/figs/activity-per-ind.png',
+       dpi = 600, units= 'in', bg = 'white', height = 5, width = 6)
+
 # temperature and hydrology time series -----------------------------------
 temp_hr <- read_csv("local-data/botcreek_temp_15mins.csv")
 temphr1 <- temp_hr |> 
@@ -211,8 +214,8 @@ env_wide |>
             legend.title = element_text(size = 10, color = "black", face = 'bold')
       )
 
-# ggsave('output/env-ts-supp.png',
-#        dpi = 600, units= 'in', bg = 'white', height = 5, width = 6)
+ggsave('output/figs/env-ts-supp.png',
+       dpi = 600, units= 'in', bg = 'white', height = 5, width = 6)
 
 # summary tables for tagged individuals -----------------------------------
 
@@ -245,8 +248,8 @@ all |>
             cv_acc = sd(y)/mean(y),
             days_obs = n_distinct(date)) |> 
       ungroup() |> 
-      left_join(total_obs, by = c("id")) #|> 
-      # capture.output(file = "output/tagger-info.csv")
+      left_join(total_obs, by = c("id")) |> 
+      capture.output(file = "output/tables/tagger-info.csv")
 
 all |> 
       mutate(id = as.character(id)) |> 
@@ -259,7 +262,7 @@ all |>
             cv_acc = sd(y)/mean(y),
             days_obs = n_distinct(date)) |> 
       ungroup() #|> 
-      # capture.output(file = "output/alltagger-summary-info.csv")
+      capture.output(file = "output/tables/alltagger-summary-info.csv")
 
 
 # additional metrics requested in review ---------------------------------------

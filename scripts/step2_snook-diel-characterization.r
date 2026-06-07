@@ -52,7 +52,7 @@ trig_bimodal_gamma  <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + cos(2
 performance::compare_performance(trig_null, trig_unimodal, trig_bimodal,
                                  trig_null_gamma, trig_unimodal_gamma, trig_bimodal_gamma) |> 
       mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |> 
-      capture.output(file = "output/q1-trig-glmm-model-comparison.csv")
+      capture.output(file = "output/tables/q1-trig-glmm-model-comparison.csv")
 
 performance::check_model(trig_bimodal_gamma)
 performance::check_collinearity(trig_bimodal_gamma)
