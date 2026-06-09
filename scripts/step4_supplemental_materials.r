@@ -37,10 +37,11 @@ glimpse(all)
 slope <- 0.01922
 intercept <- 0
 
-og <- read_rds('local-data/archive/accelerometer-model-data-012025.RDS') |> 
-      filter(species == "common snook") |> 
-      rename(acceleration_raw = acceleration) |> 
-      mutate(acceleration = slope*acceleration_raw + intercept) |> 
+### same dataset as in step 1, just with some more data attached to it
+og <- read_rds('local-data/archive/accelerometer-model-data-012025.RDS')|> 
+      filter(species == "common snook") |>
+      rename(acceleration_raw = acceleration) |>
+      mutate(acceleration = slope*acceleration_raw + intercept) |>
       rename(stage = marsh_stage,
              y = acceleration) |> 
       mutate(id = as.factor(id),
@@ -254,14 +255,16 @@ all |>
 all |> 
       mutate(id = as.character(id)) |> 
       summarize(
-            weight = mean(weight*.001),
+            weight      = mean(weight*.001),
             fork_length = mean(fl_vbf/10),
-            median_acc = median(y),
-            mean_acc = mean(y),
-            sd_acc = sd(y),
-            cv_acc = sd(y)/mean(y),
-            days_obs = n_distinct(date)) |> 
-      ungroup() #|> 
+            min_acc     = min(y),
+            max_acc     = max(y),
+            median_acc  = median(y),
+            mean_acc    = mean(y),
+            sd_acc      = sd(y),
+            cv_acc      = sd(y)/mean(y),
+            days_obs    = n_distinct(date)) |> 
+      ungroup() |> 
       capture.output(file = "output/tables/alltagger-summary-info.csv")
 
 
