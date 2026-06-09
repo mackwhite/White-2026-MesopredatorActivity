@@ -306,7 +306,8 @@ tb <- tags |>
                   TRUE ~ 'V13a'
             )
       ) |> 
-      # group_by(tag_size) |> 
+      ### copy or uncopy if you want tag-specific or general stats on tag burden
+      group_by(tag_size) |>
       summarize(mean = mean(burden_air),
                 sd = sd(burden_air),
                 min_burden = min(burden_air),
