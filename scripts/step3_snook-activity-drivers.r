@@ -79,11 +79,6 @@ s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 4) + s(stage) + s(temp) + s(s
               data = all,
               method = "REML")
 
-s_size <- gam(y ~ s(time, bs="cc") + s(weight, k = 4) + s(stage) + s(temp) + s(station, bs = "re"),
-              family = Gamma(link = 'log'),
-              data = all,
-              method = "REML")
-
 ### compare models ---
 performance::compare_performance(t_size, s_size)|> 
       mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |> 
