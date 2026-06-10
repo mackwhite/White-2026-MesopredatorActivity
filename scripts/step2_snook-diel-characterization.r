@@ -51,16 +51,23 @@ trig_bimodal_gamma  <- glmmTMB(y ~ cos(2*pi*time/24) + sin(2*pi*time/24) + cos(2
 ### model comparison ----
 performance::compare_performance(trig_null, trig_unimodal, trig_bimodal,
                                  trig_null_gamma, trig_unimodal_gamma, trig_bimodal_gamma) |> 
+      mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc)
+
+### AICc also suggests that Gamma is a better fit here
+performance::compare_performance(trig_null_gamma, trig_unimodal_gamma, trig_bimodal_gamma) |> 
       mutate(dAICc = AICc - min(AICc)) |> arrange(dAICc) |> 
       capture.output(file = "output/tables/q1-trig-glmm-model-comparison.csv")
 
 performance::check_model(trig_bimodal_gamma)
 performance::check_collinearity(trig_bimodal_gamma)
 performance::check_convergence(trig_bimodal_gamma)
+r2_nakagawa(trig_bimodal_gamma)
 
 ### model summary ---
-# summary(trig_bimodal) |> 
-#       capture.output(file = "output/q1-bestfit-glmm-summary.xlsx")
+summary(trig_bimodal_gamma) 
+performance::performance(trig_bimodal_gamma)
+summary(trig_bimodal_gamma) |>
+      capture.output(file = "output/q1-bestfit-glmm-summary.xlsx")
 
 ### generate file for model predictions/visualizations ---
 new_data <- expand.grid(
