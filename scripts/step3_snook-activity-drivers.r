@@ -496,9 +496,14 @@ glimpse(act_summary)
 
 # summary information for Ref.df and edf ----------------------------------
 summary(t_size)
+summary(s_size)
 anova(s_size, t_size)
+
 summary(t_temp)
+summary(s_temp)
 anova(s_temp, t_temp)
+
 summary(t_stage)
+summary(s_stage)
 anova(s_stage, t_stage)
 summary(s_size)
